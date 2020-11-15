@@ -35,7 +35,10 @@ up_tupe = ("up", "raise", "lift")
 down_tupe = ("down", "lower", "drop", "mark")
 
 
-logger = logging.basicConfig(filename=".\\logs\\bot_log.txt", level=logging.DEBUG)
+logger = logging.basicConfig(
+    filename=".\\logs\\bot_log.txt", 
+    level=logging.DEBUG
+    )
 
 # bot.py, below bot object
 @bot.event

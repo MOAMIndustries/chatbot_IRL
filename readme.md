@@ -14,3 +14,8 @@ Twitch -> EC2 -> IoT Core -> Robot Thing
 |back | drives the robot backwards for 1 second |
 |pen up | raises the pen from the paper |
 |pen down | lowers the pen to the paper|
+
+### Folder structure
+`/chatbot` contains all code and dependancies for the chatbot agent running in ec2.
+
+`/frank` contains code and platformio environment for the robot defined as frank
