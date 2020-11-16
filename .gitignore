@@ -1,6 +1,11 @@
-/venv
-/Pipfile
-/Pipfile.lock
-/.env
-bot_log.txt
-/logs
+/chatbot/venv
+/chatbot/Pipfile
+/chatbot/Pipfile.lock
+/chatbot/.env
+/chatbotbot_log.txt
+/chatbot/logs
+/frank/.pio
+/frank/.vscode/.browse.c_cpp.db*
+/frank/.vscode/c_cpp_properties.json
+/frank/.vscode/launch.json
+/frank/.vscode/ipch
