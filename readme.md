@@ -22,3 +22,22 @@ Twitch -> EC2 -> IoT Core -> Robot Thing
 
 ## Launching bot from cli
 `pipenv run python bot.py`
+
+# IoT Payload structure
+each type of action has a different set of parameters
+actions:
+* motion
+* lamp
+* pen
+
+parameters:
+* move
+  * left_demand (int_32)
+  * right_demand (int_32)
+  * period (int_32)
+* lamp
+  * state (int_32)
+* pen
+  * position (int_8)
+
+*_warning_* changing the format can cause kernel panic and watchdog reset in mcu

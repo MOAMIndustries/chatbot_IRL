@@ -19,26 +19,32 @@ boto3.session.Session(profile_name='iot_playground')
 client = boto3.client('iot-data')
 
 
-frank_topic = "/frank/action"
-frank_action = {
-    "action": "idle",
-    "direction": None,
-    "angle": 90,
-    "duration": 0
-}
-
+frank_topic = "frank/action"
 
 forward_tupe = ("forward", "forwards", "go")
 backward_tupe = ("backward", "backwards", "back", "reverse", "retreat")
 pen_tupe = ("pen", "marker", "texta", "sharpie")
 up_tupe = ("up", "raise", "lift")
 down_tupe = ("down", "lower", "drop", "mark")
+lamp_tupe = ("lamp", "light", "led", "floodlight")
 
 
 logger = logging.basicConfig(
     filename=".\\logs\\bot_log.txt", 
     level=logging.DEBUG
     )
+
+
+def publishActionPayload(payload):
+    resp = client.publish(
+        topic=frank_topic,
+        qos=0,
+        payload=json.dumps(payload)
+    )
+    # if resp["ResponseMetadata"]["HTTPStatusCode"] != 200:
+    #     logger.error(f"iot publish: '{resp}'")
+    # else:
+    #     logger.info(f"iot publish: '{resp}'")
 
 # bot.py, below bot object
 @bot.event
@@ -58,77 +64,68 @@ async def event_ready():
 # bot.py, below event_ready
 @bot.event
 async def event_message(message):
-    'Runs every time a message is sent in chat.'
-
+    # Runs every time a message is sent in chat.
     # make sure the bot ignores itself and the streamer
     if message.author.name.lower() == os.environ['BOT_NICK'].lower():
         return
 
-    # await message.channel.send(f"Hi, @{message.author.name}!")
     slugs = message.content.lower().split(" ")
 
-    cmd = slugs[1]
+    cmd = slugs[1].lower()
+    #logger.info(f"user: {message.author.name}, sent: {message.content}")
 
     if cmd == "left":
         # TODO check for angle!!!
-        
-        frank_action['action'] = "move"
-        frank_action['direction'] = "left"
-        frank_action['angle'] = 90
-        frank_action['duraction'] = -1
-        
-        resp = client.publish(
-            topic=frank_topic,
-            qos=0,
-            payload=json.dumps(frank_action)
-            )
+
+        publishActionPayload({
+            "action": "motion",
+            "parameters": {
+                "left_demand": -65536,
+                "right_demand": 65536,
+                "duration": 200
+            }
+        })
 
         await message.channel.send(
-            f"Ok @{message.author.name}, turning left 90 degrees"
-            )
+            f"Ok @{message.author.name}, turning left 90 degrees")
 
-    elif cmd == "right":        
-        frank_action['action'] = "move"
-        frank_action['direction'] = "right"
-        frank_action['angle'] = 90
-        frank_action['duraction'] = -1
-        
-        resp = client.publish(
-            topic=frank_topic,
-            qos=0,
-            payload=json.dumps(frank_action)
-            )
+    elif cmd == "right":
+
+        publishActionPayload({
+            "action": "motion",
+            "parameters": {
+                "left_demand": 65536,
+                "right_demand": -65536,
+                "duration": 200
+            }
+        })
 
         await message.channel.send(
-            f"Ok @{message.author.name}, turning right 90 degrees"
-            )
+            f"Ok @{message.author.name}, turning right 90 degrees")
 
-    elif cmd in forward_tupe:        
-        frank_action['action'] = "move"
-        frank_action['direction'] = "forward"
-        frank_action['angle'] = 0
-        frank_action['duraction'] = 1
-        
-        resp = client.publish(
-            topic=frank_topic,
-            qos=0,
-            payload=json.dumps(frank_action)
-            )
+    elif cmd in forward_tupe:
+        publishActionPayload({
+            "action": "motion",
+            "parameters": {
+                "left_demand": 65536,
+                "right_demand": 65536,
+                "duration": 1000
+            }
+        })
+
         await message.channel.send(
             f"Ok @{message.author.name}, moving forward"
             )
 
     elif cmd in backward_tupe:
-        frank_action['action'] = "move"
-        frank_action['direction'] = "forward"
-        frank_action['angle'] = 0
-        frank_action['duraction'] = 1
-        
-        resp = client.publish(
-            topic=frank_topic,
-            qos=0,
-            payload=json.dumps(frank_action)
-            )
+        publishActionPayload({
+            "action": "motion",
+            "parameters": {
+                "left_demand": -65536,
+                "right_demand": -65536,
+                "duration": 1000
+                }
+            })
 
         await message.channel.send(
             f"Ok @{message.author.name}, moving backward"
@@ -137,53 +134,76 @@ async def event_message(message):
     elif cmd in pen_tupe:
         # TODO check length of slugs for action, avoid
         try:
-            action = slugs[2]
+            action = slugs[2].lower()
         except IndexError:
             action = ""
 
         if action in up_tupe:
-            frank_action['action'] = "pen"
-            frank_action['direction'] = "raise"
-            frank_action['angle'] = 0
-            frank_action['duraction'] = 1
-            
-            resp = client.publish(
-                topic=frank_topic,
-                qos=0,
-                payload=json.dumps(frank_action)
-                )
+            publishActionPayload({
+                "action": "pen",
+                "parameters": {
+                    "position": 0,
+                }
+            })
 
             await message.channel.send(
                 f"Ok @{message.author.name}, raising pen"
             )
 
         elif action in down_tupe:
-            frank_action['action'] = "pen"
-            frank_action['direction'] = "lower"
-            frank_action['angle'] = 0
-            frank_action['duraction'] = 1
-            
-            resp = client.publish(
-                topic=frank_topic,
-                qos=0,
-                payload=json.dumps(frank_action)
-                )
+            publishActionPayload({
+                "action": "pen",
+                "parameters": {
+                    "position": 256,
+                }
+            })
                   
             await message.channel.send(
-                f"Ok @{message.author.name}, lowering pen"
-            )
+                f"Ok @{message.author.name}, lowering pen")
 
         else:
             await message.channel.send(
                 f"Sorry @{message.author.name}, "
                 "please tell me to raise or lower"
             )
+    
+    elif cmd in lamp_tupe:
+       # TODO check length of slugs for action, avoid
+        try:
+            action = slugs[2].lower()
+        except IndexError:
+            action = ""
+
+        if action == "on":
+            publishActionPayload({
+                "action": "lamp",
+                "parameters": {
+                    "state": 256,
+                }
+            })
+
+            await message.channel.send(
+                f"Ok @{message.author.name}, let there be light")
+
+        elif action == "off":
+            publishActionPayload({
+                "action": "lamp",
+                "parameters": {
+                    "state": 0,
+                }
+            })
+
+            await message.channel.send(
+                f"@{message.author.name}, plunged the world into darkness")
+
+        else:
+            await message.channel.send(
+                f"Sorry @{message.author.name}, "
+                "please tell me if you want the lamp on or off")
 
     else:
         await message.channel.send(
-            f"Sorry @{message.author.name}, i dont understand the command"
-            )
-
+            f"Sorry @{message.author.name}, i dont understand the command")
 
 
 if __name__ == "__main__":

@@ -25,9 +25,9 @@ const int motorFrequency = 20000;
 
 // trackMove provides structure for controling track behavior, setting a demand for each track and a duration for the action in ms
 struct trackMoveSx{
-    uint32_t demandLeft = 0;
-    uint32_t demandRight = 0;
-    int durationMs = 0;
+    int32_t demandLeft = 0;
+    int32_t demandRight = 0;
+    uint32_t durationMs = 0;
 } trackMove;
 
 QueueHandle_t xStructTracKMoveQueue = NULL;
@@ -98,6 +98,7 @@ void controlLamp(void * params){
             &( xLampState ),
             portMAX_DELAY ) == pdTRUE)
         {
+            int intensity = ( int ) xLampState;
             if(xLampState >= 1) digitalWrite(lampRelay, HIGH);
             else digitalWrite(lampRelay, LOW);
         }
@@ -110,8 +111,32 @@ void iotSubActionCallback(char *topicName, int payloadLen, char *payload){
     // load payload into json object
     DeserializationError err = deserializeJson(jsonBuffer, payload);
     if( err == DeserializationError::Ok ){
-        auto message = jsonBuffer["message"].as<char*>();
-        ESP_LOGI(TAG, " message is: %s", message);
+        auto message = jsonBuffer["action"].as<char*>();
+        ESP_LOGI(TAG, " action is: %s", message);
+
+        if(strcmp(message, "motion") == 0){
+            auto demandLeft = jsonBuffer["parameters"]["left_demand"].as<int32_t>();
+            auto demandRight = jsonBuffer["parameters"]["right_demand"].as<int32_t>();
+            auto duration = jsonBuffer["parameters"]["duration"].as<uint32_t>();
+
+            struct trackMoveSx vTrackMove;
+            vTrackMove.demandLeft = demandLeft;
+            vTrackMove.demandRight = demandRight;
+            vTrackMove.durationMs = duration;
+    
+            ESP_LOGI( TAG, 
+                "motion demand left: %i, right: %i, duration: %i", 
+                demandLeft,
+                demandRight,
+                duration);
+
+            xQueueSendToBack(xStructTracKMoveQueue, (void * ) &vTrackMove, (TickType_t) 0 );
+        }
+        else if(strcmp(message, "lamp") == 0){
+            auto intensity = jsonBuffer["parameters"]["state"].as<int>();
+            ESP_LOGI(TAG,"lamp, intensity: %i", intensity);
+            xQueueSendToBack(xLampStateQueue, (void * ) &intensity, (TickType_t) 0 );
+        }
     }
     else{
         ESP_LOGW(TAG, "Could not decode payload to JSONdocument");
@@ -182,51 +207,6 @@ void setup(void) {
 }
 
 void loop(){
-    struct trackMoveSx vTrackMove1;
-    vTrackMove1.demandLeft = 65500;
-    vTrackMove1.demandRight = 0;
-    vTrackMove1.durationMs = 1000;
-    
-    struct trackMoveSx vTrackMove2;
-    vTrackMove2.demandLeft = 0;
-    vTrackMove2.demandRight = 65500;
-    vTrackMove2.durationMs = 1000;
-
-    struct trackMoveSx vTrackMove3;
-    vTrackMove3.demandLeft = 65500;
-    vTrackMove3.demandRight = 65500;
-    vTrackMove3.durationMs = 500;
-
-    struct trackMoveSx vTrackMove4;
-    vTrackMove4.demandLeft = 65500;
-    vTrackMove4.demandRight = 65500;
-    vTrackMove4.durationMs = 100;
-
-    struct trackMoveSx vTrackMove5;
-    vTrackMove5.demandLeft = 128;
-    vTrackMove5.demandRight = 0;
-    vTrackMove5.durationMs = 1000;
-    
-    ESP_LOGI( TAG, "led 1, 1 second", NULL);
-    xQueueSendToBack(xStructTracKMoveQueue, (void * ) &vTrackMove1, (TickType_t) 0 );
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-    
-    ESP_LOGI( TAG, "led 2 1 second", NULL);
-    xQueueSendToBack(xStructTracKMoveQueue, (void * ) &vTrackMove2, (TickType_t) 0 );
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-    
-    ESP_LOGI( TAG, "led 1 and 2, half a second", NULL);
-    xQueueSendToBack(xStructTracKMoveQueue, (void * ) &vTrackMove3, (TickType_t) 0 );
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-    
-    ESP_LOGI( TAG, "led 1 and led 2 for 1/10th of a second", NULL);
-    xQueueSendToBack(xStructTracKMoveQueue, (void * ) &vTrackMove4, (TickType_t) 0 );
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-    
-    ESP_LOGI( TAG, "led 1 low demand, 1 second", NULL);
-    xQueueSendToBack(xStructTracKMoveQueue, (void * ) &vTrackMove5, (TickType_t) 0 );
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-
     while(1){
         vTaskDelay(1000/portTICK_PERIOD_MS);
     }
