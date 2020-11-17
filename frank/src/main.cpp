@@ -37,8 +37,8 @@ const uint8_t lampRelay = 22;
 QueueHandle_t xLampStateQueue = NULL;
 
 // MQTT Connection
+char TOPIC_NAME[] = "#";
 StaticJsonDocument<512> jsonBuffer;
-char payload[512];
 
 AWS_IOT iot;
 
@@ -104,6 +104,19 @@ void controlLamp(void * params){
     }
 }
 
+void iotSubActionCallback(char *topicName, int payloadLen, char *payload){
+    ESP_LOGI(TAG, "message received: %s", payload);
+
+    // load payload into json object
+    DeserializationError err = deserializeJson(jsonBuffer, payload);
+    if( err == DeserializationError::Ok ){
+        auto message = jsonBuffer["message"].as<char*>();
+        ESP_LOGI(TAG, " message is: %s", message);
+    }
+    else{
+        ESP_LOGW(TAG, "Could not decode payload to JSONdocument");
+    }
+}
 
 
 void setup(void) {
@@ -139,24 +152,24 @@ void setup(void) {
     ESP_LOGI( TAG, "Connecting to AWS IoT broker", NULL);
     if( iot.connect(ENDPOINT, CLIENT_ID)== 0)
     {
+        vTaskDelay(1000/portTICK_PERIOD_MS);
         ESP_LOGI(TAG, "Connected to AWS");
-
-        // if(0 == iot.subscribe("/house/setColor/#",SetLedCallBackHandler))
-        // {
-        //     Serial.println("Subscribe Successfull");
-        // }
-        
-        // else
-        // {
-        //     Serial.println("Subscribe Failed, Check the Thing Name and Certificates");
-        //     while(1);
-        // }
+        if(0 == iot.subscribe( TOPIC_NAME, iotSubActionCallback))
+        {
+            ESP_LOGI( TAG, "Subscribed to %s", TOPIC_NAME);
+        }
+        else
+        {
+            ESP_LOGI( TAG, "could not subscribe to topic", NULL);
+            while(1);
+        }
     }
     else
     {
         Serial.println("AWS connection failed, Check the HOST Address");
         while(1);
     }
+
 
     ESP_LOGI( TAG, "Creating Queues", NULL);   
     xStructTracKMoveQueue = xQueueCreate( 5, sizeof(trackMove));
@@ -215,6 +228,6 @@ void loop(){
     vTaskDelay(2000 / portTICK_PERIOD_MS);
 
     while(1){
-
+        vTaskDelay(1000/portTICK_PERIOD_MS);
     }
 }
