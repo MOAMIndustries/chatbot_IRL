@@ -33,7 +33,7 @@ struct trackMoveSx{
 QueueHandle_t xStructTracKMoveQueue = NULL;
 
 // Lamp bar
-const uint8_t lampRelay = 22;
+const uint8_t lampRelay = 17;
 QueueHandle_t xLampStateQueue = NULL;
 
 // MQTT Connection
@@ -74,13 +74,13 @@ void moveTracks(void * params){
             
             // Process right motor
             if(xTrackMove.demandRight >= 0){
-                digitalWrite(L298_IN3, HIGH);
-                digitalWrite(L298_IN4, LOW);
+                digitalWrite(L298_IN3, LOW);
+                digitalWrite(L298_IN4, HIGH);
                 ledcWrite(trackRightChannel, (uint32_t) xTrackMove.demandRight);
             }
             else{
-                digitalWrite(L298_IN3, LOW);
-                digitalWrite(L298_IN4, HIGH);
+                digitalWrite(L298_IN3, HIGH);
+                digitalWrite(L298_IN4, LOW);
                 ledcWrite(trackRightChannel, (uint32_t) (-1 * xTrackMove.demandRight));
             }
 
@@ -143,6 +143,54 @@ void iotSubActionCallback(char *topicName, int payloadLen, char *payload){
     }
 }
 
+void runMotorTest(){
+    struct trackMoveSx vTrackMove1;
+    vTrackMove1.demandLeft = 256;
+    vTrackMove1.demandRight = 256;
+    vTrackMove1.durationMs = 10000;
+    
+    struct trackMoveSx vTrackMove2;
+    vTrackMove2.demandLeft = -256;
+    vTrackMove2.demandRight = -256;
+    vTrackMove2.durationMs = 10000;
+
+    struct trackMoveSx vTrackMove3;
+    vTrackMove3.demandLeft = -256;
+    vTrackMove3.demandRight = 256;
+    vTrackMove3.durationMs = 10000;
+
+    struct trackMoveSx vTrackMove4;
+    vTrackMove4.demandLeft = 256;
+    vTrackMove4.demandRight = -256;
+    vTrackMove4.durationMs = 10000;
+
+    struct trackMoveSx vTrackMove5;
+    vTrackMove5.demandLeft = 256;
+    vTrackMove5.demandRight = 256;
+    vTrackMove5.durationMs = 30000;
+    
+    ESP_LOGI( TAG, "forward 10 second", NULL);
+    xQueueSendToBack(xStructTracKMoveQueue, (void * ) &vTrackMove1, (TickType_t) 0 );
+    vTaskDelay(10000 / portTICK_PERIOD_MS);
+    
+    ESP_LOGI( TAG, "backward 10 second", NULL);
+    xQueueSendToBack(xStructTracKMoveQueue, (void * ) &vTrackMove2, (TickType_t) 0 );
+    vTaskDelay(10000 / portTICK_PERIOD_MS);
+    
+    ESP_LOGI( TAG, "left 10 second", NULL);
+    xQueueSendToBack(xStructTracKMoveQueue, (void * ) &vTrackMove3, (TickType_t) 0 );
+    vTaskDelay(10000 / portTICK_PERIOD_MS);
+    
+    ESP_LOGI( TAG, "right 10 second", NULL);
+    xQueueSendToBack(xStructTracKMoveQueue, (void * ) &vTrackMove4, (TickType_t) 0 );
+    vTaskDelay(10000 / portTICK_PERIOD_MS);
+    
+    ESP_LOGI( TAG, "forward 30 seconds", NULL);
+    xQueueSendToBack(xStructTracKMoveQueue, (void * ) &vTrackMove5, (TickType_t) 0 );
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+
+}
+
 
 void setup(void) {
     Serial.begin(115200);
@@ -155,8 +203,8 @@ void setup(void) {
     pinMode(L298_IN4, OUTPUT);
     ledcAttachPin(L298_ENA, trackLeftChannel);
     ledcAttachPin(L298_ENB, trackRightChannel);
-    ledcSetup(trackLeftChannel, motorFrequency, 16);
-    ledcSetup(trackRightChannel, motorFrequency, 16);
+    ledcSetup(trackLeftChannel, motorFrequency, 8);
+    ledcSetup(trackRightChannel, motorFrequency, 8);
 
     //Configure Lamp
     ESP_LOGI( TAG, "Configuring Lamp", NULL);   
@@ -209,50 +257,7 @@ void setup(void) {
 void loop(){
 
 struct trackMoveSx vTrackMove1;
-    vTrackMove1.demandLeft = 65536;
-    vTrackMove1.demandRight = 65536;
-    vTrackMove1.durationMs = 1000;
-    
-    struct trackMoveSx vTrackMove2;
-    vTrackMove2.demandLeft = -65536;
-    vTrackMove2.demandRight = -65536;
-    vTrackMove2.durationMs = 1000;
-
-    struct trackMoveSx vTrackMove3;
-    vTrackMove3.demandLeft = -65536;
-    vTrackMove3.demandRight = 65536;
-    vTrackMove3.durationMs = 1000;
-
-    struct trackMoveSx vTrackMove4;
-    vTrackMove4.demandLeft = 65536;
-    vTrackMove4.demandRight = -65536;
-    vTrackMove4.durationMs = 1000;
-
-    struct trackMoveSx vTrackMove5;
-    vTrackMove5.demandLeft = 65536;
-    vTrackMove5.demandRight = 65536;
-    vTrackMove5.durationMs = 3000;
-    
-    ESP_LOGI( TAG, "forward 1 second", NULL);
-    xQueueSendToBack(xStructTracKMoveQueue, (void * ) &vTrackMove1, (TickType_t) 0 );
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-    
-    ESP_LOGI( TAG, "backward 1 second", NULL);
-    xQueueSendToBack(xStructTracKMoveQueue, (void * ) &vTrackMove2, (TickType_t) 0 );
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-    
-    ESP_LOGI( TAG, "left 1 second", NULL);
-    xQueueSendToBack(xStructTracKMoveQueue, (void * ) &vTrackMove3, (TickType_t) 0 );
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-    
-    ESP_LOGI( TAG, "right 1 second", NULL);
-    xQueueSendToBack(xStructTracKMoveQueue, (void * ) &vTrackMove4, (TickType_t) 0 );
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-    
-    ESP_LOGI( TAG, "forward 3 seconds", NULL);
-    xQueueSendToBack(xStructTracKMoveQueue, (void * ) &vTrackMove5, (TickType_t) 0 );
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-
+    // runMotorTest();
     while(1){
         vTaskDelay(1000/portTICK_PERIOD_MS);
     }

@@ -80,9 +80,9 @@ async def event_message(message):
         publishActionPayload({
             "action": "motion",
             "parameters": {
-                "left_demand": -65536,
-                "right_demand": 65536,
-                "duration": 200
+                "left_demand": 256,
+                "right_demand": -256,
+                "duration": 500
             }
         })
 
@@ -94,9 +94,9 @@ async def event_message(message):
         publishActionPayload({
             "action": "motion",
             "parameters": {
-                "left_demand": 65536,
-                "right_demand": -65536,
-                "duration": 200
+                "left_demand": -256,
+                "right_demand": 256,
+                "duration": 500
             }
         })
 
@@ -107,9 +107,9 @@ async def event_message(message):
         publishActionPayload({
             "action": "motion",
             "parameters": {
-                "left_demand": 65536,
-                "right_demand": 65536,
-                "duration": 1000
+                "left_demand": 200,
+                "right_demand": 200,
+                "duration": 500
             }
         })
 
@@ -121,9 +121,9 @@ async def event_message(message):
         publishActionPayload({
             "action": "motion",
             "parameters": {
-                "left_demand": -65536,
-                "right_demand": -65536,
-                "duration": 1000
+                "left_demand": -200,
+                "right_demand": -200,
+                "duration": 500
                 }
             })
 
