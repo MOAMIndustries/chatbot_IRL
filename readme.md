@@ -19,3 +19,6 @@ Twitch -> EC2 -> IoT Core -> Robot Thing
 `/chatbot` contains all code and dependancies for the chatbot agent running in ec2.
 
 `/frank` contains code and platformio environment for the robot defined as frank
+
+## Launching bot from cli
+`pipenv run python bot.py`

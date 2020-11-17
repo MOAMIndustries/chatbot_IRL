@@ -9,3 +9,4 @@
 /frank/.vscode/c_cpp_properties.json
 /frank/.vscode/launch.json
 /frank/.vscode/ipch
+/frank/src/credentials.h
