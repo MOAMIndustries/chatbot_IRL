@@ -21,7 +21,7 @@ const uint8_t L298_ENB = 5;
 const uint8_t trackLeftChannel = 0;
 const uint8_t trackRightChannel = 1;
 
-const int motorFrequency = 20000;
+const int motorFrequency = 2000;
 
 // trackMove provides structure for controling track behavior, setting a demand for each track and a duration for the action in ms
 struct trackMoveSx{
@@ -64,24 +64,24 @@ void moveTracks(void * params){
             if(xTrackMove.demandLeft >= 0){
                 digitalWrite(L298_IN1, HIGH);
                 digitalWrite(L298_IN2, LOW);
-                ledcWrite(trackLeftChannel, xTrackMove.demandLeft);
+                ledcWrite(trackLeftChannel, (uint32_t) xTrackMove.demandLeft );
             }
             else{
                 digitalWrite(L298_IN1, LOW);
                 digitalWrite(L298_IN2, HIGH);
-                ledcWrite(trackLeftChannel, -xTrackMove.demandLeft);
+                ledcWrite(trackLeftChannel, (uint32_t) (-1 * xTrackMove.demandLeft));
             }
             
             // Process right motor
             if(xTrackMove.demandRight >= 0){
                 digitalWrite(L298_IN3, HIGH);
                 digitalWrite(L298_IN4, LOW);
-                ledcWrite(trackRightChannel, xTrackMove.demandRight);
+                ledcWrite(trackRightChannel, (uint32_t) xTrackMove.demandRight);
             }
             else{
                 digitalWrite(L298_IN3, LOW);
                 digitalWrite(L298_IN4, HIGH);
-                ledcWrite(trackRightChannel, -xTrackMove.demandRight);
+                ledcWrite(trackRightChannel, (uint32_t) (-1 * xTrackMove.demandRight));
             }
 
             vTaskDelay(xTrackMove.durationMs / portTICK_PERIOD_MS);
@@ -207,6 +207,52 @@ void setup(void) {
 }
 
 void loop(){
+
+struct trackMoveSx vTrackMove1;
+    vTrackMove1.demandLeft = 65536;
+    vTrackMove1.demandRight = 65536;
+    vTrackMove1.durationMs = 1000;
+    
+    struct trackMoveSx vTrackMove2;
+    vTrackMove2.demandLeft = -65536;
+    vTrackMove2.demandRight = -65536;
+    vTrackMove2.durationMs = 1000;
+
+    struct trackMoveSx vTrackMove3;
+    vTrackMove3.demandLeft = -65536;
+    vTrackMove3.demandRight = 65536;
+    vTrackMove3.durationMs = 1000;
+
+    struct trackMoveSx vTrackMove4;
+    vTrackMove4.demandLeft = 65536;
+    vTrackMove4.demandRight = -65536;
+    vTrackMove4.durationMs = 1000;
+
+    struct trackMoveSx vTrackMove5;
+    vTrackMove5.demandLeft = 65536;
+    vTrackMove5.demandRight = 65536;
+    vTrackMove5.durationMs = 3000;
+    
+    ESP_LOGI( TAG, "forward 1 second", NULL);
+    xQueueSendToBack(xStructTracKMoveQueue, (void * ) &vTrackMove1, (TickType_t) 0 );
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    
+    ESP_LOGI( TAG, "backward 1 second", NULL);
+    xQueueSendToBack(xStructTracKMoveQueue, (void * ) &vTrackMove2, (TickType_t) 0 );
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    
+    ESP_LOGI( TAG, "left 1 second", NULL);
+    xQueueSendToBack(xStructTracKMoveQueue, (void * ) &vTrackMove3, (TickType_t) 0 );
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    
+    ESP_LOGI( TAG, "right 1 second", NULL);
+    xQueueSendToBack(xStructTracKMoveQueue, (void * ) &vTrackMove4, (TickType_t) 0 );
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    
+    ESP_LOGI( TAG, "forward 3 seconds", NULL);
+    xQueueSendToBack(xStructTracKMoveQueue, (void * ) &vTrackMove5, (TickType_t) 0 );
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+
     while(1){
         vTaskDelay(1000/portTICK_PERIOD_MS);
     }
