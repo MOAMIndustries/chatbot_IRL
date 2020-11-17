@@ -19,7 +19,7 @@ boto3.session.Session(profile_name='iot_playground')
 client = boto3.client('iot-data')
 
 
-frank_topic = "/"
+frank_topic = "/frank/action"
 frank_action = {
     "action": "idle",
     "direction": None,

@@ -6,6 +6,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
+#include <AWS_IOT.h>
+#include <ArduinoJson.h>
 
 static const char* TAG = "main";
 
@@ -33,6 +35,13 @@ QueueHandle_t xStructTracKMoveQueue = NULL;
 // Lamp bar
 const uint8_t lampRelay = 22;
 QueueHandle_t xLampStateQueue = NULL;
+
+// MQTT Connection
+StaticJsonDocument<512> jsonBuffer;
+char payload[512];
+
+AWS_IOT iot;
+
 
 
 // Controls motor tracks by processing a struct from a queue
@@ -127,7 +136,27 @@ void setup(void) {
     ESP_LOGI(TAG, "Connected with IP: %s", WiFi.localIP());
 
     //Connect to broker
-    
+    ESP_LOGI( TAG, "Connecting to AWS IoT broker", NULL);
+    if( iot.connect(ENDPOINT, CLIENT_ID)== 0)
+    {
+        ESP_LOGI(TAG, "Connected to AWS");
+
+        // if(0 == iot.subscribe("/house/setColor/#",SetLedCallBackHandler))
+        // {
+        //     Serial.println("Subscribe Successfull");
+        // }
+        
+        // else
+        // {
+        //     Serial.println("Subscribe Failed, Check the Thing Name and Certificates");
+        //     while(1);
+        // }
+    }
+    else
+    {
+        Serial.println("AWS connection failed, Check the HOST Address");
+        while(1);
+    }
 
     ESP_LOGI( TAG, "Creating Queues", NULL);   
     xStructTracKMoveQueue = xQueueCreate( 5, sizeof(trackMove));

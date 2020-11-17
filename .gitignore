@@ -10,3 +10,6 @@
 /frank/.vscode/launch.json
 /frank/.vscode/ipch
 /frank/src/credentials.h
+
+# use aws_iot_certicates_sample.c as an example
+aws_iot_certificates.c
