@@ -1,5 +1,7 @@
 #include "frank.h"
+#include "credentials.h"
 #include <arduino.h>
+#include <WiFi.h> 
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -98,8 +100,8 @@ void controlLamp(void * params){
 void setup(void) {
     Serial.begin(115200);
 
-    ESP_LOGI( TAG, "Configuring IO", NULL);   
     //Configure Motor PWM
+    ESP_LOGI( TAG, "Configuring Motor", NULL);   
     pinMode(L298_IN1, OUTPUT);
     pinMode(L298_IN2, OUTPUT);
     pinMode(L298_IN3, OUTPUT);
@@ -110,10 +112,22 @@ void setup(void) {
     ledcSetup(trackRightChannel, motorFrequency, 16);
 
     //Configure Lamp
+    ESP_LOGI( TAG, "Configuring Lamp", NULL);   
     pinMode(lampRelay, OUTPUT);
     digitalWrite(lampRelay, LOW);
 
-    //Connecting to WiFi & broker
+    //Connect to WiFi
+    ESP_LOGI(TAG, "Connecting to wifi");
+    WiFi.begin(ssid, pwd);
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        ESP_LOGI(TAG, "Connection pending...");
+    }
+
+    ESP_LOGI(TAG, "Connected with IP: %s", WiFi.localIP());
+
+    //Connect to broker
+    
 
     ESP_LOGI( TAG, "Creating Queues", NULL);   
     xStructTracKMoveQueue = xQueueCreate( 5, sizeof(trackMove));
